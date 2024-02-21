@@ -1,0 +1,133 @@
+<script type="text/x-red" data-template-name="StoreNForward">
+    <div class="form-row">
+    	<label for="node-input-name"><i class="icon-tag"></i> Name</label>
+    	<input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+    	<label for="node-input-connected">Connected Status Matches</label>
+    	<input type="text" id="node-input-connected" placeholder="pattern">
+    </div>
+    <div class="form-row">
+    	<label for="node-input-disconnected">Disconnected Status Matches</label>
+    	<input type="text" id="node-input-disconnected" placeholder="pattern">
+    </div>
+    <div class="form-row">
+        <label for="node-input-inMemoryDb"><i class="fa fa-database"></i> Use In-Memory SQLite DB</label>
+        <input type="checkbox" id="node-input-inMemoryDb" style="display: inline-block; width: auto; vertical-align: top;">
+    </div>
+    <div class="form-row">
+    	<label for="node-input-sqlite"><i class="fa-file"></i>Path to SQLite DB file</label>
+    	<input type="text" id="node-input-sqlite" placeholder="file path">
+    </div>
+    <div class="form-row">
+    	<label for="node-input-speed"><i></i>Speed (ms)</label>
+    	<input type="text" id="node-input-speed" placeholder="ms">
+    </div>
+</script>
+
+
+<script type="text/x-red" data-help-name="StoreNForward">
+
+
+    <p>Queues undeliverable messages to file for later delivery.</p>
+
+      <p>If the network connection is lost during operation this node will divert all new  messages to file.
+      When the connection is established it will offload the messages from that file in a first in first out order
+      The node has persistent storage so even if there is  1 or multiple blackouts it will still offload the file upon restart.
+      .</p>
+
+      <p>A good example is sensor data passing to an MQTT node. The Mqtt node is sending the sensor data to a broker outside it own network.
+      This could be a cloud broker or remote server on the same site.
+      The node also has a property to control how fast the stored messages offload. This allows the design to have more control on the handling of the messages</p>
+
+    <p>The <i>Connected Status Matches</i> section is a regular expression <i>^connected</i> which
+    matches all status text messages that start with <i>connected</i>.  In addition to regular
+    expressions, you can also specify a simple substring match.  Because there is no
+    value specified to match <i>Disconnected Status Matches</i>, any message that doesn't
+    match <i>^connected</i> will be deemed a disconnected state.</p>
+
+    <p>Conversely, if a <i>Disconnected Status Matches</i> value is provided, but not for
+    <i>Connected Status Matches</i>, then any status text that does not match will be
+    deemed a connected state.</p>
+
+    <p>Finally, if both a <i>Connected Status Matches</i> and <i>Disconnected Status Matches</i>
+    value is given, then any status text doesn't match either, will be ignored, and
+    the current state will remain.</p>
+
+    <p>You must also specify a filename for the sqlite database that stores queued
+    messages during a <i>disconnected</i> state.  This database file <strong>must not</strong> be
+    shared between multiple queue nodes.</p>
+
+    <p>Message release node input property is in ms. the messages will release from the store
+    at the selected time ms
+    An example : the store has saved 60 messages during the disconnected period.
+    You selected 1000 ms the store would offload in 1 minute..</p>
+
+</script>
+
+<script type="text/javascript">
+    // @ts-check
+    RED.nodes.registerType('StoreNForward', {
+        category: 'function',
+        color: '#B9B6B8',
+        defaults: {
+            name: {
+                value: '',
+            },
+            speed: {
+                value: '10',
+                validate: function (v) {
+                    return RED.validators.number(v);
+                },
+            },
+            connected: {
+                value: '',
+                validate: function (val) {
+                    return val !== '' || this.disconnected !== '';
+                },
+            },
+            connectedType: {
+                value: 'str',
+            },
+            disconnected: {
+                value: '',
+                validate: function (val) {
+                    return val !== '' || this.connected !== '';
+                },
+            },
+            disconnectedType: {
+                value: 'str',
+            },
+            sqlite: {
+                value: '',
+                required: true,
+            },
+            inMemoryDb: {
+                value: false,
+            },
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'nexiona.png',
+        label: function () {
+            return this.name || 'StoreNForward';
+        },
+        oneditprepare: function () {
+            $('#node-input-connected').typedInput({
+                default: this.connectedType || 'str',
+                types: ['str', 're'],
+            });
+            $('#node-input-disconnected').typedInput({
+                default: this.disconnectedType || 'str',
+                types: ['str', 're'],
+            });
+        },
+        oneditsave: function () {
+            this.connectedType = $('#node-input-connected').typedInput('type');
+            this.disconnectedType = $('#node-input-disconnected').typedInput(
+                'type'
+            );
+            this.inMemoryDb = $('#node-input-inMemoryDb').is(':checked');
+        },
+    });
+</script>

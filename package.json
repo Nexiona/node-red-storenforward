@@ -1,0 +1,28 @@
+{
+  "name": "@nexiona/storenforward",
+  "version": "1.0.0",
+  "author": "NEXIONA",
+  "description": "A contributed Node-RED node, that queues undeliverable messages to file for later delivery.",
+  "keywords": [
+    "node-red",
+    "node-red-contrib",
+    "node",
+    "iot",
+    "queue",
+    "nexiona",
+    "persistent",
+    "sqlite"
+  ],
+  "license": "MIT",
+  "bundleDependencies": false,
+  "deprecated": false,
+  "dependencies": {
+    "node-persistent-queue": "^1.0.5",
+    "shallowequal": "^1.1.0"
+  },
+  "node-red": {
+    "nodes": {
+      "queue": "queue/queue.js"
+    }
+  }
+}
